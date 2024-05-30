@@ -1,0 +1,24 @@
+import type { MailerGatewayInterface } from '../../domain/gateway';
+import { Resend } from 'resend';
+
+export class MailerGateway implements MailerGatewayInterface {
+	private readonly client: Resend;
+
+	constructor() {
+		this.client = new Resend(process.env.RESEND_API_KEY);
+	}
+
+	async sendTranscriptionResult(email: string, transcriptions: { fileName: string, buffer: Buffer }[]): Promise<void> {
+		const attachments = transcriptions.map(t => {
+			return { content: t.buffer, filename: t.fileName }
+		})
+
+		await this.client.emails.send({
+			from: 'Acme <onboarding@resend.dev>',
+			to: 'delivered@resend.dev', // email,
+			subject: 'Transcription',
+			attachments: attachments,
+			html: `<h1>Result of your transcription</h1><p>You can find the result of the transcription of your files in attachments</p>`
+		})
+	}
+}

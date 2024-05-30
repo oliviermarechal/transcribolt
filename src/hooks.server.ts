@@ -1,0 +1,1 @@
+import '../packages/core/infra/scheduler/speech-to-text.scheduler'
