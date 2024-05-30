@@ -20,6 +20,7 @@
 	"dependencies": {
 		"@google-cloud/storage": "^7.11.1",
 		"@lemonsqueezy/lemonsqueezy.js": "^3.0.0",
+		"@sveltejs/adapter-vercel": "^5.3.1",
 		"add": "^2.0.6",
 		"autoprefixer": "^10.4.19",
 		"bits-ui": "^0.21.9",
