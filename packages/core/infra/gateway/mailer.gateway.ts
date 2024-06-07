@@ -15,7 +15,7 @@ export class MailerGateway implements MailerGatewayInterface {
 
 		await this.client.emails.send({
 			from: 'Acme <onboarding@resend.dev>',
-			to: 'delivered@resend.dev', // email,
+			to: email,
 			subject: 'Transcription',
 			attachments: attachments,
 			html: `<h1>Result of your transcription</h1><p>You can find the result of the transcription of your files in attachments</p>`

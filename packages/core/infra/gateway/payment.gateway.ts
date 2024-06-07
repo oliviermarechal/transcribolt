@@ -23,7 +23,7 @@ export class PaymentGateway implements PaymentGatewayInterface {
 				name: 'transcription',
 			},
 			expiresAt: null,
-			testMode: true,
+			testMode: Boolean(process.env.TEST_MODE),
 		};
 
 		const { statusCode, error, data } = await createCheckout('89660', '384696', newCheckout);

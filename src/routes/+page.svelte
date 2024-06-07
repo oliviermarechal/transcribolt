@@ -1,3 +1,7 @@
+<svelte:head>
+	<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+</svelte:head>
+
 <script lang="ts">
 	import Dropzone from "svelte-file-dropzone";
 	import '../app.css';
@@ -8,21 +12,31 @@
 	import { onMount } from 'svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from "$lib/components/ui/badge";
-	import { OnPaymentSuccessed } from '$lib/actions/on-payment-successed';
+	import { OnPaymentSuccessed, type OutputFormat } from '$lib/actions/on-payment-successed';
 
 	const languageMapping = [
-		{ language: 'English (United Kingdom)', code: 'en-GB' },
-		{ language: 'English (United States)', code: 'en-US' },
-		{ language: 'French', code: 'fr-FR' },
-		{ language: 'Italian', code: 'it-IT' },
-		{ language: 'Spanish',  code: 'es-ES' },
-		{ language: 'German',  code: 'de-DE' },
+		{ language: 'English', code: 'en' },
+		{ language: 'French', code: 'fr' },
+		{ language: 'Italian', code: 'it' },
+		{ language: 'Spanish',  code: 'es' },
+		{ language: 'German',  code: 'de' },
 	]
 
-	let resume: {id: string, fileName: string, duration: number, cost: number, extension: string, language?: string, file: File}[] = []
+	const outputFormatAvailable = ['json', 'text', 'srt', 'verbose_json', 'vtt'];
+
+	let resume: {
+		id: string,
+		fileName: string,
+		duration: number,
+		cost: number,
+		extension: string,
+		language?: string,
+		outputFormat: OutputFormat,
+		file: File,
+	}[] = []
 	let email: string;
 	let checkoutId: string;
-	let languagesIsSet = false;
+	let isComplete = false;
 
 	const removeFile = (id: string) => {
 		resume = resume.filter(f => f.id !== id);
@@ -30,9 +44,9 @@
 
 	$: {
 		if (resume?.length === 0) {
-			languagesIsSet = false;
+			isComplete = false;
 		} else {
-			languagesIsSet = resume.filter(r => !r.language).length === 0;
+			isComplete = resume.filter(r => !r.language || !r.outputFormat).length === 0;
 		}
 	}
 
@@ -44,21 +58,21 @@
 		LemonSqueezy.Setup({
 			eventHandler: async (event: any) => {
 				if (event.event === 'Checkout.Success') {
-					await OnPaymentSuccessed(
+					// @ts-ignore TODO use stripe instead
+					LemonSqueezy.Url.Close();
+					const response = await OnPaymentSuccessed(
 						resume.map(r => {
 							return {
 								file: r.file,
 								language: r.language as string,
-								fileName: r.fileName,
+								fileName: `${r.fileName}.${r.extension}`,
+								outputFormat: r.outputFormat,
 							}
 						}),
-						email,
 						checkoutId,
 						event.data.order.data.id
 					)
-					// @ts-ignore
-					LemonSqueezy.Url.Close();
-					// Redirect on success ?
+					console.log(response);
 				}
 			}
 		})
@@ -78,6 +92,7 @@
 					fileName: file.name.trim().replace(`.${extension}`, ''),
 					duration: res.duration,
 					cost: res.cost,
+					outputFormat: 'text',
 				},
 			];
 		}))
@@ -125,10 +140,20 @@
 			return r;
 		})
 	}
+
+	const onSelectOutputFormatChange = (itemId: string, value: unknown | undefined) => {
+		resume = resume.map(r => {
+			if (r.id === itemId) {
+				return {
+					...r,
+					outputFormat: value ? value as OutputFormat : 'text',
+				}
+			}
+
+			return r;
+		})
+	}
 </script>
-<svelte:head>
-	<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
-</svelte:head>
 
 <div class="flex flex-col items-center justify-center min-h-screen">
 	<header class="w-9/12 py-4 text-center">
@@ -152,7 +177,7 @@
 		</div>
 		<div class="flex flex-col space-y-2 w-full text-center p-4 text-xl">
 			{#if resume.length > 0}
-				<p>Please select the language of the audio file(s) to proceed with transcription.</p>
+				<p>Please select the language of the audio file(s) and the output format to proceed with transcription.</p>
 				<p>You can rename your files if you want</p>
 			{/if}
 			{#each resume as item}
@@ -171,16 +196,25 @@
 						</Select.Root>
 					</div>
 					<div class="w-3/12 flex flex-col gap-1.5 text-left">
+						<Label for="{item.id}_format">Output format</Label>
+						<Select.Root onSelectedChange={(e) => onSelectOutputFormatChange(item.id, e?.value)} selected={{value: item.outputFormat, label: item.outputFormat}}>
+							<Select.Trigger id="{item.id}_format" class="w-full">
+								<Select.Value placeholder="Select output format" />
+							</Select.Trigger>
+							<Select.Content class="w-full">
+								{#each outputFormatAvailable as format}
+									<Select.Item value="{format}">{format}</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+					</div>
+					<div class="w-3/12 flex flex-col gap-1.5 text-left">
 						<Label for="{item.id}_filename">Filename</Label>
 						<Input id="{item.id}_filename" bind:value={item.fileName} on:change={e => item.fileName = e.currentTarget.value.trim().toLowerCase()} class="w-full" />
 					</div>
 					<div class="w-2/12 flex flex-col gap-1.5">
-						<Label>Duration</Label>
-						<span>{formatDuration(item.duration)}</span>
-					</div>
-					<div class="w-2/12 flex flex-col gap-1.5">
-						<Label>Cost</Label>
-						<span>{item.cost}$</span>
+						<Label>Duration / cost </Label>
+						<span class="text-sm">{formatDuration(item.duration)} / {item.cost}$</span>
 					</div>
 					<div class="w-1/12 flex flex-col gap-1.5">
 						<Button on:click={() => removeFile(item.id)}>
@@ -192,7 +226,7 @@
 				</div>
 			{/each}
 		</div>
-		{#if languagesIsSet}
+		{#if isComplete}
 			<hr />
 			<div class="flex justify-between w-full">
 				<div class="w-1/4 p-2">

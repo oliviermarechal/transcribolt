@@ -12,10 +12,10 @@ export class App {
         this.useCases.set(key, useCase);
     }
 
-    getUseCase(key: string): UseCaseInterface {
+    getUseCase<T>(key: string): T {
         const usecase = this.useCases.get(key);
         if (usecase) {
-            return usecase;
+            return usecase as T;
         }
 
         throw new Error('Usecase not found');

@@ -1,4 +1,4 @@
-import type { UseCaseInterface } from '../domain/interfaces';
+import type { UploadedTranscriptionFileInterface, UseCaseInterface } from '../domain/interfaces';
 import type { PaymentGatewayInterface, TranscriptorGatewayInterface } from '../domain/gateway';
 import { App } from '../app/app';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,12 +8,12 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 		private readonly paymentGateway: PaymentGatewayInterface,
 		private readonly transcriptorGateway: TranscriptorGatewayInterface,
 	) {}
+
 	async handle(
-		files: { buffer: Buffer, language: string, name: string }[],
-		email: string,
+		files: UploadedTranscriptionFileInterface[],
 		checkoutId: string,
 		orderId: string,
-	): Promise<void> {
+	): Promise<any[]> {
 		const db = App.getDb();
 		const transcriptionRequest = await db
 			.selectFrom('transcription_request')
@@ -22,19 +22,23 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 			.executeTakeFirst();
 
 		if (transcriptionRequest && await this.paymentGateway.checkPaymentSuccess(orderId)) {
-			for (const file of files) {
-				const { taskId, gcsFilename } = await this.transcriptorGateway.transcribeAudio(file.buffer, file.language, file.name);
+			return Promise.all(files.map(async (file) => {
+				const transcription = await this.transcriptorGateway.transcribeAudio(file);
 				await Promise.all([
 					db.insertInto('transcription_request_item').values({
 						id: uuidv4(),
 						transcription_id: transcriptionRequest.id,
 						file_name: file.name,
-						gcs_file_name: gcsFilename,
-						task_id: taskId,
+						output_format: file.outputFormat,
+						timestamp_granularity: file.timestampGranularity,
 					}).execute(),
-					db.updateTable('transcription_request').set({order_id: orderId, status: 'waiting_result'}).where('id', '=', transcriptionRequest.id).execute(),
+					db.updateTable('transcription_request').set({order_id: orderId, status: 'done'}).where('id', '=', transcriptionRequest.id).execute(),
 				]);
-			}
+
+				return transcription;
+			}))
 		}
+
+		return [];
 	}
 }
