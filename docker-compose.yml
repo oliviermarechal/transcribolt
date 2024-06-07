@@ -18,7 +18,7 @@ services:
       - .:/app
     working_dir: /app
     command: >
-      sh -c "yarn install && yarn build && yarn start"
+      sh -c "yarn install && yarn build"
     depends_on:
       - postgres
     ports:
