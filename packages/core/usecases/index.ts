@@ -5,9 +5,7 @@ import dotenv from 'dotenv';
 import { ProcessingTranscriptionUseCase } from './processing-transcription.use-case';
 import { TranscriptorGateway } from '../infra/gateway/transcriptor.gateway';
 
-if (process.env.NODE_ENV !== 'production') {
-	dotenv.config();
-}
+dotenv.config();
 
 export * from './create-checkout.use-case';
 export * from './processing-transcription.use-case';
