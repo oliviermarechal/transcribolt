@@ -13,6 +13,11 @@ export default defineConfig(({mode}) => {
 			alias: {
 				core: path.resolve(__dirname, './packages/core')
 			}
+		},
+		build: {
+			rollupOptions: {
+				external: ['kysely']
+			}
 		}
 	}
 });
