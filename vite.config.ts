@@ -16,7 +16,7 @@ export default defineConfig(({mode}) => {
 		},
 		build: {
 			rollupOptions: {
-				external: ['kysely']
+				external: ['kysely', '@vercel/postgres-kysely']
 			}
 		}
 	}
