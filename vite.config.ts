@@ -11,7 +11,7 @@ export default defineConfig(({mode}) => {
 		plugins: [sveltekit()],
 		resolve: {
 			alias: {
-				core: path.resolve(__dirname, '../packages/core')
+				core: path.resolve(__dirname, '../../packages/core')
 			}
 		}
 	}
