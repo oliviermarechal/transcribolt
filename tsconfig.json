@@ -12,7 +12,7 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"paths": {
-			"core/*": ["../../packages/core/*"]
+			"core/*": ["./packages/core/*"]
 		}
 	}
 }

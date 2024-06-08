@@ -2,7 +2,7 @@ import { App } from 'core/app/app';
 import { json } from '@sveltejs/kit';
 import { ProcessingTranscriptionUseCase } from 'core/usecases';
 import type { UploadedTranscriptionFileInterface } from 'core/domain/interfaces';
-import type { OutputFormat } from '$lib/actions/on-payment-successed';
+import type { OutputFormat } from '../../../lib/actions/on-payment-successed';
 
 const app = App.getInstance();
 
