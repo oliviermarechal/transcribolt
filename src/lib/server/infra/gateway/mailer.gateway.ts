@@ -5,7 +5,7 @@ export class MailerGateway implements MailerGatewayInterface {
 	private readonly client: Resend;
 
 	constructor() {
-		this.client = new Resend(process.env.RESEND_API_KEY);
+		this.client = new Resend(process.env.PRIVATE_RESEND_API_KEY);
 	}
 
 	async sendTranscriptionResult(email: string, transcriptions: { fileName: string, buffer: Buffer }[]): Promise<void> {
