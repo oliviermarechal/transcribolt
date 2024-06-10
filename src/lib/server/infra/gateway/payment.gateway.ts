@@ -1,6 +1,5 @@
 import { type NewCheckout, lemonSqueezySetup, createCheckout, getOrder } from '@lemonsqueezy/lemonsqueezy.js';
 import { type PaymentGatewayInterface } from '../../domain/gateway';
-import { LEMON_SQUEEZE_TEST_MODE } from '$env/static/private'
 
 export class PaymentGateway implements PaymentGatewayInterface {
 	constructor(
@@ -24,7 +23,7 @@ export class PaymentGateway implements PaymentGatewayInterface {
 				name: 'transcription',
 			},
 			expiresAt: null,
-			testMode: Boolean(LEMON_SQUEEZE_TEST_MODE),
+			testMode: true,
 		};
 
 		const { statusCode, error, data } = await createCheckout('89660', '384696', newCheckout);
