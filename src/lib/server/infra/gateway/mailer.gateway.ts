@@ -1,11 +1,12 @@
 import type { MailerGatewayInterface } from '../../domain/gateway';
 import { Resend } from 'resend';
+import { RESEND_API_KEY } from '$env/static/private'
 
 export class MailerGateway implements MailerGatewayInterface {
 	private readonly client: Resend;
 
 	constructor() {
-		this.client = new Resend(process.env.PRIVATE_RESEND_API_KEY);
+		this.client = new Resend(RESEND_API_KEY);
 	}
 
 	async sendTranscriptionResult(email: string, transcriptions: { fileName: string, buffer: Buffer }[]): Promise<void> {

@@ -1,13 +1,14 @@
 import type { TranscriptorGatewayInterface } from '../../domain/gateway';
 import OpenAI, { toFile } from 'openai';
 import type { UploadedTranscriptionFileInterface } from '../../domain/interfaces';
+import { OPENAI_API_KEY } from '$env/static/private'
 
 export class TranscriptorGateway implements TranscriptorGatewayInterface {
 	private client: OpenAI;
 
 	constructor() {
 		this.client = new OpenAI({
-			apiKey: process.env.PRIVATE_OPENAI_API_KEY,
+			apiKey: OPENAI_API_KEY,
 		});
 	}
 
