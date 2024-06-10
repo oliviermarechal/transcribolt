@@ -1,6 +1,6 @@
-import { CreateCheckoutUseCase } from 'core/usecases';
-import { App } from 'core/app/app';
 import { json } from '@sveltejs/kit';
+import { CreateCheckoutUseCase } from '$lib/server/usecases';
+import { App } from '$lib/server/app/app';
 
 const app = App.getInstance();
 

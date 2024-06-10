@@ -1,8 +1,8 @@
-import { App } from 'core/app/app';
+import { App } from '$lib/server/app/app';
 import { json } from '@sveltejs/kit';
-import { ProcessingTranscriptionUseCase } from 'core/usecases';
-import type { UploadedTranscriptionFileInterface } from 'core/domain/interfaces';
-import type { OutputFormat } from '../../../lib/actions/on-payment-successed';
+import { ProcessingTranscriptionUseCase } from '$lib/server/usecases';
+import type { UploadedTranscriptionFileInterface } from '$lib/server/domain/interfaces';
+import type { OutputFormat } from '$lib/actions/on-payment-successed';
 
 const app = App.getInstance();
 

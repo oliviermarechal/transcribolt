@@ -2,12 +2,6 @@
 	"name": "svelte-monolithe",
 	"version": "0.0.1",
 	"private": true,
-	"workspaces": [
-		"packages/*"
-	],
-	"yarnConfig": {
-		"workspace-folder-check": false
-	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -23,12 +17,16 @@
 		"@lemonsqueezy/lemonsqueezy.js": "^3.0.0",
 		"@sveltejs/adapter-node": "^5.0.1",
 		"@vercel/blob": "^0.23.3",
+		"@vercel/postgres-kysely": "^0.8.0",
 		"add": "^2.0.6",
 		"autoprefixer": "^10.4.19",
 		"bits-ui": "^0.21.9",
 		"clsx": "^2.1.1",
 		"dotenv": "^16.4.5",
 		"dotenv-expand": "^11.0.6",
+		"ffprobe": "^1.1.2",
+		"ffprobe-static": "^3.1.0",
+		"kysely": "^0.27.3",
 		"lucide-svelte": "^0.379.0",
 		"openai": "^4.47.3",
 		"postcss": "^8.4.38",
@@ -37,6 +35,7 @@
 		"tailwind-merge": "^2.3.0",
 		"tailwind-variants": "^0.2.1",
 		"tailwindcss": "^3.4.3",
+		"uuid": "^10.0.0",
 		"yarn": "^1.22.22"
 	},
 	"devDependencies": {
@@ -44,7 +43,11 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/eslint": "^8.56.0",
+		"@types/ffprobe": "^1.1.8",
+		"@types/ffprobe-static": "^2.0.3",
+		"@types/node": "^20.14.2",
 		"@types/node-cron": "^3.0.11",
+		"@types/uuid": "^9.0.8",
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.0.0",
 		"eslint": "^8.56.0",
