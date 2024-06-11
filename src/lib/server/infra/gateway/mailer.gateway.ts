@@ -7,6 +7,8 @@ export class MailerGateway implements MailerGatewayInterface {
 
 	constructor() {
 		if (env.RESEND_API_KEY) {
+			console.log('env.RESEND_API_KEY');
+			console.log(env.RESEND_API_KEY);
 			this.client = new Resend(env.RESEND_API_KEY);
 		}
 	}
