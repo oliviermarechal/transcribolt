@@ -3,24 +3,16 @@ import { Resend } from 'resend';
 import { env } from '$env/dynamic/private'
 
 export class MailerGateway implements MailerGatewayInterface {
-	private readonly client?: Resend;
+	private readonly client: Resend;
 
 	constructor() {
-		if (env.RESEND_API_KEY) {
-			console.log('env.RESEND_API_KEY');
-			console.log(env.RESEND_API_KEY);
-			this.client = new Resend(env.RESEND_API_KEY);
-		}
+		this.client = new Resend(env.RESEND_API_KEY);
 	}
 
 	async sendTranscriptionResult(email: string, transcriptions: { fileName: string, buffer: Buffer }[]): Promise<void> {
 		const attachments = transcriptions.map(t => {
 			return { content: t.buffer, filename: t.fileName }
 		})
-
-		if (!this.client) {
-			throw new Error('Client are not initialized')
-		}
 
 		await this.client.emails.send({
 			from: 'Acme <onboarding@resend.dev>',

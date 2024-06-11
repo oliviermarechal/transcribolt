@@ -4,12 +4,14 @@ import type { UploadedTranscriptionFileInterface } from '../../domain/interfaces
 import { env } from '$env/dynamic/private'
 
 export class TranscriptorGateway implements TranscriptorGatewayInterface {
-	private client: OpenAI;
+	private client?: OpenAI;
 
 	constructor() {
-		this.client = new OpenAI({
-			apiKey: env.OPENAI_API_KEY,
-		});
+		if (env.OPENAI_API_KEY) {
+			this.client = new OpenAI({
+				apiKey: env.OPENAI_API_KEY,
+			});
+		}
 	}
 
 	async transcribeAudio(file: UploadedTranscriptionFileInterface): Promise<OpenAI.Audio.Transcriptions.Transcription> {
@@ -24,6 +26,9 @@ export class TranscriptorGateway implements TranscriptorGatewayInterface {
 			body.timestamp_granularities = [file.timestampGranularity];
 		}
 
+		if (!this.client) {
+			throw new Error('Client is not initialized')
+		}
 		return this.client.audio.transcriptions.create(body)
 	}
 }
