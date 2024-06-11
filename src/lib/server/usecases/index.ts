@@ -4,7 +4,7 @@ import { PaymentGateway } from '../infra/gateway/payment.gateway';
 import dotenv from 'dotenv';
 import { ProcessingTranscriptionUseCase } from './processing-transcription.use-case';
 import { TranscriptorGateway } from '../infra/gateway/transcriptor.gateway';
-import { LEMON_SQUEEZE_API_KEY } from '$env/dymanic/private'
+import { LEMON_SQUEEZE_API_KEY } from '$env/dynamic/private'
 
 dotenv.config();
 
