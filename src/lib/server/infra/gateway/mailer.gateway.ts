@@ -1,6 +1,6 @@
 import type { MailerGatewayInterface } from '../../domain/gateway';
 import { Resend } from 'resend';
-import { RESEND_API_KEY } from '$env/static/private'
+import { RESEND_API_KEY } from '$env/dynamic/private'
 
 export class MailerGateway implements MailerGatewayInterface {
 	private readonly client: Resend;

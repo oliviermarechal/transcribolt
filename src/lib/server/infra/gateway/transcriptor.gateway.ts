@@ -1,7 +1,7 @@
 import type { TranscriptorGatewayInterface } from '../../domain/gateway';
 import OpenAI, { toFile } from 'openai';
 import type { UploadedTranscriptionFileInterface } from '../../domain/interfaces';
-import { OPENAI_API_KEY } from '$env/static/private'
+import { OPENAI_API_KEY } from '$env/dynamic/private'
 
 export class TranscriptorGateway implements TranscriptorGatewayInterface {
 	private client: OpenAI;
