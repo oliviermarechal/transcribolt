@@ -4,9 +4,9 @@ CREATE TABLE transcription_request (
    id uuid NOT NULL,
    email VARCHAR ( 100 ) NOT NULL,
    created_at TIMESTAMPTZ DEFAULT NOW(),
-   checkout_it VARCHAR ( 100 ) DEFAULT NULL,
+   checkout_id VARCHAR ( 100 ) DEFAULT NULL,
    order_id VARCHAR ( 100 ) DEFAULT NULL,
-   price INTEGER NOT NULL,
+   price NUMERIC(10, 2) NOT NULL,
    status VARCHAR ( 100 ) DEFAULT NULL,
    PRIMARY KEY(id)
 );
