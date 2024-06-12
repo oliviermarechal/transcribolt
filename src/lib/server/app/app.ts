@@ -1,7 +1,7 @@
 import type { UseCaseInterface } from '../domain/interfaces';
-import { Kysely } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
 import { type Database } from './database/database';
-import { createKysely } from '@vercel/postgres-kysely';
+import { Pool } from 'pg';
 
 export class App {
     private static instance: App;
@@ -31,7 +31,20 @@ export class App {
 
     public static getDb(): Kysely<Database> {
         if (!App.db) {
-            App.db = createKysely<Database>();
+            const dialect = new PostgresDialect({
+                pool: new Pool({
+                    database: process.env.DB_NAME,
+                    host: process.env.DB_HOST,
+                    user: process.env.DB_USER,
+                    password: process.env.DB_PASSWORD,
+                    port: 5434,
+                    max: 10,
+                })
+            })
+
+            App.db = new Kysely<Database>({
+                dialect,
+            })
         }
 
         return App.db;

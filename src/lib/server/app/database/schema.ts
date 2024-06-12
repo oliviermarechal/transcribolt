@@ -19,4 +19,3 @@ export interface TranscriptionRequestItemTable {
 	// IF output_format === verbose_json (So display Subtitle format (vtt or srt), text format, json format or verbose_format)
 	timestamp_granularity?: string; // (word | segment)
 }
-
