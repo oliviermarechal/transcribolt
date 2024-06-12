@@ -1,7 +1,7 @@
 import type { UseCaseInterface } from '../domain/interfaces';
 import { Kysely, PostgresDialect } from 'kysely';
 import { type Database } from './database/database';
-import { Pool } from 'pg';
+import pg from 'pg';
 
 export class App {
     private static instance: App;
@@ -32,7 +32,7 @@ export class App {
     public static getDb(): Kysely<Database> {
         if (!App.db) {
             const dialect = new PostgresDialect({
-                pool: new Pool({
+                pool: new pg.Pool({
                     database: process.env.DB_NAME,
                     host: process.env.DB_HOST,
                     user: process.env.DB_USER,
