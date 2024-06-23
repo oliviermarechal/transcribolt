@@ -5,7 +5,6 @@ CREATE TABLE transcription_request (
    email VARCHAR ( 100 ) NOT NULL,
    created_at TIMESTAMPTZ DEFAULT NOW(),
    checkout_id VARCHAR ( 100 ) DEFAULT NULL,
-   order_id VARCHAR ( 100 ) DEFAULT NULL,
    price NUMERIC(10, 2) NOT NULL,
    status VARCHAR ( 100 ) DEFAULT NULL,
    PRIMARY KEY(id)

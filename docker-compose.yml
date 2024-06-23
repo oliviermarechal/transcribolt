@@ -1,9 +1,11 @@
 version: '3.8'
 
 services:
-  postgres:
+  transcribolt_db:
     image: postgres:latest
     container_name: transcribolt_db
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_DB: transcribolt
       POSTGRES_USER: transcribolt

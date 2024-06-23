@@ -8,21 +8,19 @@ export class CreateCheckoutUseCase implements UseCaseInterface {
 		private readonly paymentGateway: PaymentGatewayInterface,
 	) {}
 
-	async handle(price: number, email: string): Promise<{ success: boolean, checkout?: {url: string, id: string}, error?: string }> {
+	async handle(price: number, email: string): Promise<{ clientSecret: string | null, id: string }> {
 		const result = await this.paymentGateway.createCheckout(price, email);
-		if (result.success) {
-			await App.getDb()
-				.insertInto('transcription_request')
-				.values({
-					id: uuidv4(),
-					email: email,
-					price: price,
-					status: 'new',
-					checkout_id: result.checkout?.id,
-				})
-				.execute();
-		}
+		await App.getDb()
+			.insertInto('transcription_request')
+			.values({
+				id: uuidv4(),
+				email: email,
+				price: price,
+				status: 'new',
+				checkout_id: result.id,
+			})
+			.execute();
 
-		return result;
+		return { clientSecret: result.clientSecret, id: result.id };
 	}
 }

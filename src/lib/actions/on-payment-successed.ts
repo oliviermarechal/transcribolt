@@ -3,7 +3,6 @@ export type OutputFormat = 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
 export const OnPaymentSuccessed = async (
 	files: {file: File, language: string, fileName: string, outputFormat: OutputFormat}[],
 	checkoutId: string,
-	orderId: string
 ) => {
 	const formData = new FormData();
 	files.forEach((item, index) => {
@@ -14,15 +13,10 @@ export const OnPaymentSuccessed = async (
 	});
 
 	formData.append('checkoutId', checkoutId);
-	formData.append('orderId', orderId);
 
 	const response = await fetch('/api/paymentSuccessed', {
 		method: 'POST',
 		body: formData,
-		headers: {
-			'Accept': 'application/json',
-			'Content-Type': 'application/json',
-		}
 	});
 
 	return response.json();

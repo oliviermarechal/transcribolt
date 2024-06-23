@@ -5,7 +5,6 @@ export interface TranscriptionRequestTable {
 	email: string;
 	created_at?: Date;
 	checkout_id: string | null;
-	order_id?: string | null;
 	price: number;
 	status: string | null;
 }

@@ -29,15 +29,13 @@ export async function POST({ request }) {
 	}
 
 	const checkoutId = data.get('checkoutId') as string;
-	const orderId = data.get('orderId') as string;
 
 	const processingTranscriptionUseCase = app.getUseCase<ProcessingTranscriptionUseCase>(ProcessingTranscriptionUseCase.name);
 
-	await processingTranscriptionUseCase.handle(
+	const transcriptions = await processingTranscriptionUseCase.handle(
 		files,
 		checkoutId,
-		orderId,
 	);
 
-	return json({})
+	return json({transcriptions})
 }

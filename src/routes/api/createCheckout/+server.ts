@@ -9,8 +9,9 @@ export async function POST({ request }) {
 	const body = await request.json();
 	const price = body['price'];
 	const email = body['email'];
-	const createCheckoutUseCase = app.getUseCase<CreateCheckoutUseCase>(CreateCheckoutUseCase.name);
-	const { success, checkout, error } = await createCheckoutUseCase.handle(price, email);
 
-	return json({ success, checkout, error });
+	const createCheckoutUseCase = app.getUseCase<CreateCheckoutUseCase>(CreateCheckoutUseCase.name);
+	const { clientSecret, id } = await createCheckoutUseCase.handle(price, email);
+
+	return json({ clientSecret, checkoutId: id });
 }

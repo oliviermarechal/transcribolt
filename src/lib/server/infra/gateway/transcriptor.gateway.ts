@@ -1,7 +1,8 @@
 import type { TranscriptorGatewayInterface } from '../../domain/gateway';
-import OpenAI, { toFile } from 'openai';
+import OpenAI from 'openai';
 import type { UploadedTranscriptionFileInterface } from '../../domain/interfaces';
 import { env } from '$env/dynamic/private'
+import fs from 'fs';
 
 export class TranscriptorGateway implements TranscriptorGatewayInterface {
 	private client?: OpenAI;
@@ -14,9 +15,9 @@ export class TranscriptorGateway implements TranscriptorGatewayInterface {
 		}
 	}
 
-	async transcribeAudio(file: UploadedTranscriptionFileInterface): Promise<OpenAI.Audio.Transcriptions.Transcription> {
+	async transcribeAudio(filePath: string, file: UploadedTranscriptionFileInterface): Promise<string> {
 		const body: OpenAI.Audio.Transcriptions.TranscriptionCreateParams = {
-			file: await toFile(file.buffer),
+			file: fs.createReadStream(filePath),
 			model: "whisper-1",
 			language: file.language,
 			response_format: file.outputFormat,
@@ -29,6 +30,9 @@ export class TranscriptorGateway implements TranscriptorGatewayInterface {
 		if (!this.client) {
 			throw new Error('Client is not initialized')
 		}
-		return this.client.audio.transcriptions.create(body)
+
+		const transcriptionResult = await this.client.audio.transcriptions.create(body);
+
+		return transcriptionResult as unknown as string;
 	}
 }

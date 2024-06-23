@@ -11,7 +11,7 @@ dotenv.config();
 export * from './create-checkout.use-case';
 export * from './processing-transcription.use-case';
 
-const paymentGateway = new PaymentGateway(env.LEMON_SQUEEZE_API_KEY as string);
+const paymentGateway = new PaymentGateway();
 
 const app = App.getInstance();
 app.registerUseCase(

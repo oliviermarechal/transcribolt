@@ -1,49 +1,28 @@
-import { type NewCheckout, lemonSqueezySetup, createCheckout, getOrder } from '@lemonsqueezy/lemonsqueezy.js';
 import { type PaymentGatewayInterface } from '../../domain/gateway';
+import Stripe from 'stripe';
+import { env } from '$env/dynamic/private'
 
 export class PaymentGateway implements PaymentGatewayInterface {
-	constructor(
-		private readonly lemonSqueezeApiKey: string,
-	) {
-		lemonSqueezySetup({apiKey: this.lemonSqueezeApiKey});
+	private clientStripe: Stripe;
+	constructor() {
+		this.clientStripe = new Stripe(env.STRIPE_SECRET_KEY as string);
 	}
 
-	async createCheckout(price: number, email: string): Promise<{
-		success: boolean,
-		error?: string,
-		checkout?: {
-			url: string,
-			id: string,
-		}
-	}> {
-		const newCheckout: NewCheckout = {
-			customPrice: Number(price.toFixed(2)) * 100,
-			checkoutData: {
-				email: email,
-				name: 'transcription',
-			},
-			expiresAt: null,
-			testMode: true,
-		};
+	async createCheckout(price: number, email: string): Promise<{ clientSecret: string | null, id: string }> {
+		const paymentIntent = await this.clientStripe.paymentIntents.create({
+			amount: price,
+			currency: 'usd',
+			automatic_payment_methods: {
+				enabled: true
+			}
+		});
 
-		const { statusCode, error, data } = await createCheckout('89660', '384696', newCheckout);
-
-		if (!error) {
-			return {
-				success: true,
-				checkout: {
-					url: data.data.attributes.url,
-					id: data.data.id,
-				}
-			};
-		}
-
-		return { success: false, error: error.message };
+		return { clientSecret: paymentIntent.client_secret, id: paymentIntent.id };
 	}
 
-	async checkPaymentSuccess(id: string): Promise<boolean> {
-		const response = await getOrder(id);
+	async checkPaymentSuccess(paymentIntentId: string): Promise<boolean> {
+		const payment = await this.clientStripe.paymentIntents.retrieve(paymentIntentId)
 
-		return response.data?.data.attributes.status === 'paid';
+		return payment.status === "succeeded";
 	}
 }

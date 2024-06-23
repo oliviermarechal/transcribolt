@@ -1,15 +1,13 @@
-<svelte:head>
-	<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
-</svelte:head>
-
 <script lang="ts">
 	import Dropzone from "svelte-file-dropzone";
 	import '../app.css';
 	import { calculateCost } from '$lib/actions/calculate-cost';
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
+	import PaymentModal from "$lib/components/payment-modal.svelte";
+	import Result from "$lib/components/result.svelte";
 	import * as Select from "$lib/components/ui/select";
-	import { onMount } from 'svelte';
+	import * as Dialog from "$lib/components/ui/dialog";
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from "$lib/components/ui/badge";
 	import { OnPaymentSuccessed, type OutputFormat } from '$lib/actions/on-payment-successed';
@@ -34,9 +32,12 @@
 		outputFormat: OutputFormat,
 		file: File,
 	}[] = []
+	let results: { data: string, filename: string, outputFormat: OutputFormat }[] = [];
 	let email: string;
-	let checkoutId: string;
+	let clientSecret: string | null;
 	let isComplete = false;
+	let loading = false;
+	let showResult = false;
 
 	const removeFile = (id: string) => {
 		resume = resume.filter(f => f.id !== id);
@@ -50,33 +51,24 @@
 		}
 	}
 
-	onMount(() => {
-		if (typeof window === 'undefined') {
-			return;
-		}
-		// @ts-ignore
-		LemonSqueezy.Setup({
-			eventHandler: async (event: any) => {
-				if (event.event === 'Checkout.Success') {
-					// @ts-ignore TODO use stripe instead
-					LemonSqueezy.Url.Close();
-					const response = await OnPaymentSuccessed(
-						resume.map(r => {
-							return {
-								file: r.file,
-								language: r.language as string,
-								fileName: `${r.fileName}.${r.extension}`,
-								outputFormat: r.outputFormat,
-							}
-						}),
-						checkoutId,
-						event.data.order.data.id
-					)
-					console.log(response);
+	const onPaymentSuccess = async (checkoutId: string) => {
+		clientSecret = null;
+		loading = true;
+		const response = await OnPaymentSuccessed(
+			resume.map(r => {
+				return {
+					file: r.file,
+					language: r.language as string,
+					fileName: `${r.fileName}.${r.extension}`,
+					outputFormat: r.outputFormat,
 				}
-			}
-		})
-	});
+			}),
+			checkoutId,
+		)
+		loading = false;
+		results = response.transcriptions;
+		showResult = true;
+	}
 
 	const handleDropFiles = async (e: {detail: {acceptedFiles: FileList, fileRejections: any}}) => {
 		const { acceptedFiles } = e.detail;
@@ -103,7 +95,7 @@
 			return;
 		}
 
-		const price = total + 1
+		const price = Math.round((total + 1) * 100)
 		const response = await fetch('/api/createCheckout', {
 			method: 'POST',
 			body: JSON.stringify({price, email}),
@@ -113,9 +105,7 @@
 		});
 
 		const res = await response.json();
-		checkoutId = res.checkout.id;
-		// @ts-ignore
-		LemonSqueezy.Url.Open(res.checkout.url);
+		clientSecret = res.clientSecret
 	}
 
 	let total: number;
@@ -155,89 +145,138 @@
 	}
 </script>
 
-<div class="flex flex-col items-center justify-center min-h-screen">
-	<header class="w-9/12 py-4 text-center">
-		<h1 class="text-2xl font-bold text-primary">Transcribolt</h1>
-		<p class="mt-4">Transform your spoken words into written text effortlessly with our no-signup speech to text transcription tool. Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments. Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p>
-	</header>
-	<main class="flex-1 flex flex-col items-center px-4 mt-28 w-9/12 space-y-2">
-		<div class="w-full flex items-center justify-center">
-			<Dropzone
-				on:drop={handleDropFiles}
-				accept={['video/*', 'audio/*']}
-				disableDefaultStyles={true}
-				containerClasses="bg-default rounded-lg cursor-pointer w-full {resume.length > 0 ? 'h-32' : 'h-64'} border-2 border-primary border-dashed text-center text-white"
-			>
-				<div class="flex flex-col items-center justify-center pt-5 pb-6 text-primary">
-					<svg class="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-					<p class="mb-2 text-sm dark:text-white text-black"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-					<p class="text-xs dark:text-white text-black">audio or video file(s)</p>
-				</div>
-			</Dropzone>
-		</div>
-		<div class="flex flex-col space-y-2 w-full text-center p-4 text-xl">
-			{#if resume.length > 0}
-				<p>Please select the language of the audio file(s) and the output format to proceed with transcription.</p>
-				<p>You can rename your files if you want</p>
-			{/if}
-			{#each resume as item}
-				<div class="flex justify-around text-center space-x-2 border rounded-xl p-4">
-					<div class="w-3/12 flex flex-col gap-1.5 text-left">
-						<Label for="{item.id}_language">File language</Label>
-						<Select.Root onSelectedChange={(e) => onSelectLanguageChange(item.id, e?.value)} selected={{value: item.language, label: languageMapping.find(l => l.code === item.language)?.language}}>
-							<Select.Trigger id="{item.id}_language" class="w-full">
-								<Select.Value placeholder="Select file language" />
-							</Select.Trigger>
-							<Select.Content class="w-full">
-								{#each languageMapping as language}
-									<Select.Item value="{language.code}">{language.language}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
+{#if loading}
+	<div class="flex flex-col items-center justify-center min-h-screen">
+		<div class="loader"></div>
+	</div>
+{:else if showResult}
+	<Dialog.Root open={Boolean(showResult)} onOpenChange={() => showResult = !showResult}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>transcription files</Dialog.Title>
+				<Dialog.Description>
+					<Result filesData={results} />
+				</Dialog.Description>
+			</Dialog.Header>
+			<Dialog.Footer>
+				<Button on:click={() => showResult = false}>Close</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
+	<div class="flex flex-col items-center justify-center min-h-screen">
+		<header class="w-9/12 py-4 text-center">
+			<h1 class="text-2xl font-bold text-primary">Transcribolt</h1>
+			<p class="mt-4">Transform your spoken words into written text effortlessly with our no-signup speech to text transcription tool. Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments. Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p>
+		</header>
+		<main class="flex-1 flex flex-col items-center px-4 mt-28 w-9/12 space-y-2">
+			<div class="w-full flex items-center justify-center">
+				<Dropzone
+					on:drop={handleDropFiles}
+					accept={['video/*', 'audio/*']}
+					disableDefaultStyles={true}
+					containerClasses="bg-default rounded-lg cursor-pointer w-full {resume.length > 0 ? 'h-32' : 'h-64'} border-2 border-primary border-dashed text-center text-white"
+				>
+					<div class="flex flex-col items-center justify-center pt-5 pb-6 text-primary">
+						<svg class="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+						<p class="mb-2 text-sm dark:text-white text-black"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+						<p class="text-xs dark:text-white text-black">audio or video file(s)</p>
 					</div>
-					<div class="w-3/12 flex flex-col gap-1.5 text-left">
-						<Label for="{item.id}_format">Output format</Label>
-						<Select.Root onSelectedChange={(e) => onSelectOutputFormatChange(item.id, e?.value)} selected={{value: item.outputFormat, label: item.outputFormat}}>
-							<Select.Trigger id="{item.id}_format" class="w-full">
-								<Select.Value placeholder="Select output format" />
-							</Select.Trigger>
-							<Select.Content class="w-full">
-								{#each outputFormatAvailable as format}
-									<Select.Item value="{format}">{format}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</div>
-					<div class="w-3/12 flex flex-col gap-1.5 text-left">
-						<Label for="{item.id}_filename">Filename</Label>
-						<Input id="{item.id}_filename" bind:value={item.fileName} on:change={e => item.fileName = e.currentTarget.value.trim().toLowerCase()} class="w-full" />
-					</div>
-					<div class="w-2/12 flex flex-col gap-1.5">
-						<Label>Duration / cost </Label>
-						<span class="text-sm">{formatDuration(item.duration)} / {item.cost}$</span>
-					</div>
-					<div class="w-1/12 flex flex-col gap-1.5">
-						<Button on:click={() => removeFile(item.id)}>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-							</svg>
-						</Button>
-					</div>
-				</div>
-			{/each}
-		</div>
-		{#if isComplete}
-			<hr />
-			<div class="flex justify-between w-full">
-				<div class="w-1/4 p-2">
-					Transaction cost <Badge>1$</Badge>
-				</div>
-				<div class="w-1/4 p-2">
-					Total <Badge>{total + 1}$</Badge>
-				</div>
-				<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} /></div>
-				<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email)}>Go</Button></div>
+				</Dropzone>
 			</div>
-		{/if}
-	</main>
-</div>
+			<div class="flex flex-col space-y-2 w-full text-center p-4 text-xl">
+				{#if resume.length > 0}
+					<p>Please select the language of the audio file(s) and the output format to proceed with transcription.</p>
+					<p>You can rename your files if you want</p>
+				{/if}
+				{#each resume as item}
+					<div class="flex justify-around text-center space-x-2 border rounded-xl p-4">
+						<div class="w-3/12 flex flex-col gap-1.5 text-left">
+							<Label for="{item.id}_language">File language</Label>
+							<Select.Root onSelectedChange={(e) => onSelectLanguageChange(item.id, e?.value)} selected={{value: item.language, label: languageMapping.find(l => l.code === item.language)?.language}}>
+								<Select.Trigger id="{item.id}_language" class="w-full">
+									<Select.Value placeholder="Select file language" />
+								</Select.Trigger>
+								<Select.Content class="w-full">
+									{#each languageMapping as language}
+										<Select.Item value="{language.code}">{language.language}</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="w-3/12 flex flex-col gap-1.5 text-left">
+							<Label for="{item.id}_format">Output format</Label>
+							<Select.Root onSelectedChange={(e) => onSelectOutputFormatChange(item.id, e?.value)} selected={{value: item.outputFormat, label: item.outputFormat}}>
+								<Select.Trigger id="{item.id}_format" class="w-full">
+									<Select.Value placeholder="Select output format" />
+								</Select.Trigger>
+								<Select.Content class="w-full">
+									{#each outputFormatAvailable as format}
+										<Select.Item value="{format}">{format}</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="w-3/12 flex flex-col gap-1.5 text-left">
+							<Label for="{item.id}_filename">Filename</Label>
+							<Input id="{item.id}_filename" bind:value={item.fileName} on:change={e => item.fileName = e.currentTarget.value.trim().toLowerCase()} class="w-full" />
+						</div>
+						<div class="w-2/12 flex flex-col gap-1.5">
+							<Label>Duration / cost </Label>
+							<span class="text-sm">{formatDuration(item.duration)} / {item.cost}$</span>
+						</div>
+						<div class="w-1/12 flex flex-col gap-1.5">
+							<Button on:click={() => removeFile(item.id)}>
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+								</svg>
+							</Button>
+						</div>
+					</div>
+				{/each}
+			</div>
+			{#if isComplete}
+				<hr />
+				<div class="flex justify-between w-full">
+					<div class="w-1/4 p-2">
+						Transaction cost <Badge>1$</Badge>
+					</div>
+					<div class="w-1/4 p-2">
+						Total <Badge>{total + 1}$</Badge>
+					</div>
+					<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} /></div>
+					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email)}>Go</Button></div>
+				</div>
+			{/if}
+		</main>
+	</div>
+
+	{#if clientSecret}
+		<Dialog.Root open={Boolean(clientSecret)}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Payment</Dialog.Title>
+					<Dialog.Description>
+						<PaymentModal onPaymentSuccess={onPaymentSuccess} onPaymentCancelled={() => console.log('Cancelled')} clientSecret={clientSecret} />
+					</Dialog.Description>
+				</Dialog.Header>
+			</Dialog.Content>
+		</Dialog.Root>
+	{/if}
+{/if}
+
+<style>
+    .loader {
+        width: 50px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+                radial-gradient(farthest-side,#ffa516 94%,#0000) top/8px 8px no-repeat,
+                conic-gradient(#0000 30%,#ffa516);
+        -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+        animation: l13 1s infinite linear;
+    }
+    @keyframes l13{
+        100%{transform: rotate(1turn)}
+    }
+</style>
