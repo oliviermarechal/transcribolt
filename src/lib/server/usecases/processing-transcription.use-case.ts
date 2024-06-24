@@ -93,8 +93,8 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 			const zip = new JSZip();
 			await Promise.all(splittedFiles.map(async file => {
 				await fs.writeFile(`/tmp/${file.name}`, file.buffer);
-				// const transcription = await this.transcriptorGateway.transcribeAudio(`/tmp/${file.name}`, file);
-				const transcription = 'mocking result';
+				const transcription = await this.transcriptorGateway.transcribeAudio(`/tmp/${file.name}`, file);
+				// const transcription = 'mocking result';
 				await Promise.all([
 					db.insertInto('transcription_request_item').values({
 						id: uuidv4(),
