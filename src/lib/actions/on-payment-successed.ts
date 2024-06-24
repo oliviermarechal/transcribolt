@@ -14,10 +14,8 @@ export const OnPaymentSuccessed = async (
 
 	formData.append('checkoutId', checkoutId);
 
-	const response = await fetch('/api/paymentSuccessed', {
+	return fetch('/api/paymentSuccessed', {
 		method: 'POST',
 		body: formData,
 	});
-
-	return response.json();
 }

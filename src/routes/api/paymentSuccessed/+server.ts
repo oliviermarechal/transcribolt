@@ -1,8 +1,9 @@
 import { App } from '$lib/server/app/app';
-import { json } from '@sveltejs/kit';
 import { ProcessingTranscriptionUseCase } from '$lib/server/usecases';
 import type { UploadedTranscriptionFileInterface } from '$lib/server/domain/interfaces';
 import type { OutputFormat } from '$lib/actions/on-payment-successed';
+import fs from 'fs';
+import { json } from '@sveltejs/kit';
 
 const app = App.getInstance();
 
@@ -32,10 +33,19 @@ export async function POST({ request }) {
 
 	const processingTranscriptionUseCase = app.getUseCase<ProcessingTranscriptionUseCase>(ProcessingTranscriptionUseCase.name);
 
-	const transcriptions = await processingTranscriptionUseCase.handle(
+	const zipBuffer = await processingTranscriptionUseCase.handle(
 		files,
 		checkoutId,
 	);
 
-	return json({transcriptions})
+	if (!zipBuffer) {
+		return json({}, {status: 400})
+	}
+
+	return new Response(zipBuffer, {
+		headers: {
+			'Content-Type': 'application/zip',
+			'Content-Disposition': 'attachment; filename="transcriptions.zip"',
+		},
+	});
 }

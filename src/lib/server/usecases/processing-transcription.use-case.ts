@@ -6,6 +6,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { promises as fs } from 'fs';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
+import JSZip from 'jszip';
 
 export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 	constructor(
@@ -16,7 +17,7 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 	async handle(
 		files: UploadedTranscriptionFileInterface[],
 		checkoutId: string,
-	): Promise<{ data: string, filename: string, outputFormat: string }[]> {
+	): Promise<Buffer | undefined> {
 		const db = App.getDb();
 		const transcriptionRequest = await db
 			.selectFrom('transcription_request')
@@ -24,10 +25,9 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 			.selectAll()
 			.executeTakeFirst();
 
-		const transcriptions: { data: string, filename: string, outputFormat: string }[] = [];
 		if (transcriptionRequest && await this.paymentGateway.checkPaymentSuccess(checkoutId)) {
 			const splittedFiles: UploadedTranscriptionFileInterface[] = [];
-			for (const file of files) {
+			await Promise.all(files.map(async file => {
 				const type = await fileTypeFromBuffer(file.buffer);
 				if (type?.mime.startsWith('video')) {
 					const tmpPath = `/tmp/${path.parse(file.name).name}`;
@@ -88,11 +88,13 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 				} else {
 					splittedFiles.push(file);
 				}
-			}
+			}));
 
+			const zip = new JSZip();
 			await Promise.all(splittedFiles.map(async file => {
 				await fs.writeFile(`/tmp/${file.name}`, file.buffer);
-				const transcription = await this.transcriptorGateway.transcribeAudio(`/tmp/${file.name}`, file);
+				// const transcription = await this.transcriptorGateway.transcribeAudio(`/tmp/${file.name}`, file);
+				const transcription = 'mocking result';
 				await Promise.all([
 					db.insertInto('transcription_request_item').values({
 						id: uuidv4(),
@@ -105,12 +107,28 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 					fs.unlink(`/tmp/${file.name}`),
 				]);
 
-				transcriptions.push({ data: transcription, filename: path.parse(file.name).name, outputFormat: file.outputFormat });
+				zip.file(
+					`${path.parse(file.name).name}.${this.getExtension(file.outputFormat)}`,
+					transcription
+				);
 			}));
 
-			return transcriptions;
+			return Buffer.from(await zip.generateAsync({type: 'arraybuffer'}));
 		}
+	}
 
-		return transcriptions;
+	getExtension(format: 'json' | 'srt' | 'verbose_json' | 'vtt' | 'text'): string {
+		switch (format) {
+			case 'json':
+			case 'verbose_json':
+				return 'json';
+			case 'srt':
+				return 'srt';
+			case 'vtt':
+				return 'vtt';
+			case 'text':
+			default:
+				return 'txt';
+		}
 	}
 }

@@ -27,6 +27,7 @@
 		"ffprobe-static": "^3.1.0",
 		"file-type": "^19.0.0",
 		"fluent-ffmpeg": "^2.1.3",
+		"jszip": "^3.10.1",
 		"kysely": "^0.27.3",
 		"lucide-svelte": "^0.395.0",
 		"openai": "^4.47.3",

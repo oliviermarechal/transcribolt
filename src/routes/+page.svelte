@@ -5,7 +5,6 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import PaymentModal from "$lib/components/payment-modal.svelte";
-	import Result from "$lib/components/result.svelte";
 	import * as Select from "$lib/components/ui/select";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Label } from '$lib/components/ui/label';
@@ -32,12 +31,10 @@
 		outputFormat: OutputFormat,
 		file: File,
 	}[] = []
-	let results: { data: string, filename: string, outputFormat: OutputFormat }[] = [];
 	let email: string;
 	let clientSecret: string | null;
 	let isComplete = false;
 	let loading = false;
-	let showResult = false;
 
 	const removeFile = (id: string) => {
 		resume = resume.filter(f => f.id !== id);
@@ -66,8 +63,23 @@
 			checkoutId,
 		)
 		loading = false;
-		results = response.transcriptions;
-		showResult = true;
+
+		if (response.ok) {
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.style.display = 'none';
+			a.href = url;
+			a.download = 'transcriptions.zip';
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+
+			resume = [];
+			email = '';
+			clientSecret = null;
+			isComplete = false;
+		}
 	}
 
 	const handleDropFiles = async (e: {detail: {acceptedFiles: FileList, fileRejections: any}}) => {
@@ -149,20 +161,6 @@
 	<div class="flex flex-col items-center justify-center min-h-screen">
 		<div class="loader"></div>
 	</div>
-{:else if showResult}
-	<Dialog.Root open={Boolean(showResult)} onOpenChange={() => showResult = !showResult}>
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>transcription files</Dialog.Title>
-				<Dialog.Description>
-					<Result filesData={results} />
-				</Dialog.Description>
-			</Dialog.Header>
-			<Dialog.Footer>
-				<Button on:click={() => showResult = false}>Close</Button>
-			</Dialog.Footer>
-		</Dialog.Content>
-	</Dialog.Root>
 {:else}
 	<div class="flex flex-col items-center justify-center min-h-screen">
 		<header class="w-9/12 py-4 text-center">

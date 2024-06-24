@@ -33,6 +33,6 @@ export class TranscriptorGateway implements TranscriptorGatewayInterface {
 
 		const transcriptionResult = await this.client.audio.transcriptions.create(body);
 
-		return transcriptionResult as unknown as string;
+		return transcriptionResult.text ? transcriptionResult.text : transcriptionResult as unknown as string;
 	}
 }
