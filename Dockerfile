@@ -1,6 +1,6 @@
 FROM node:20
 
-RUN apt update && apt-upgrade
+RUN apt update && apt upgrade
 RUN apt install ffmpeg
 
 WORKDIR /usr/src/app
