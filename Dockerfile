@@ -1,7 +1,7 @@
 FROM node:20
 
 RUN apt update && apt upgrade
-RUN apt install ffmpeg
+RUN apt install ffmpeg -y
 
 WORKDIR /usr/src/app
 COPY package*.json ./
