@@ -20,6 +20,9 @@
 	]
 
 	const outputFormatAvailable = ['json', 'text', 'srt', 'verbose_json', 'vtt'];
+	const maxSize = 50 * 1024 * 1024;
+	let totalSize = 0;
+	$: totalSize = resume.reduce((acc, resume) => acc + resume.file.size, 0)
 
 	let resume: {
 		id: string,
@@ -35,6 +38,7 @@
 	let clientSecret: string | null;
 	let isComplete = false;
 	let loading = false;
+	let error: string | null = null;
 
 	const removeFile = (id: string) => {
 		resume = resume.filter(f => f.id !== id);
@@ -45,6 +49,11 @@
 			isComplete = false;
 		} else {
 			isComplete = resume.filter(r => !r.language || !r.outputFormat).length === 0;
+			if (totalSize > maxSize) {
+				error = `The total file size exceeds the 50MB limit. Current size: ${(totalSize / (1024 * 1024)).toFixed(2)}MB.`;
+			} else {
+				error = '';
+			}
 		}
 	}
 
@@ -103,7 +112,7 @@
 	}
 
 	const createCheckout = async () => {
-		if (!email) {
+		if (!email || Boolean(error)) {
 			return;
 		}
 
@@ -167,7 +176,7 @@
 			<h1 class="text-2xl font-bold text-primary">Transcribolt</h1>
 			<p class="mt-4">Transform your spoken words into written text effortlessly with our no-signup speech to text transcription tool. Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments. Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p>
 		</header>
-		<main class="flex-1 flex flex-col items-center px-4 mt-28 w-9/12 space-y-2">
+		<main class="flex-1 flex flex-col items-center px-4 mt-28 mb-28 w-9/12 space-y-2">
 			<div class="w-full flex items-center justify-center">
 				<Dropzone
 					on:drop={handleDropFiles}
@@ -224,14 +233,27 @@
 							<span class="text-sm">{formatDuration(item.duration)} / {item.cost}$</span>
 						</div>
 						<div class="w-1/12 flex flex-col gap-1.5">
-							<Button on:click={() => removeFile(item.id)}>
-								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+							<Button variant="ghost" on:click={() => removeFile(item.id)}>
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-primary">
 									<path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
 								</svg>
 							</Button>
 						</div>
 					</div>
 				{/each}
+				{#if resume?.length > 0}
+					{#if totalSize}
+						<p class="text-sm">File size: {(totalSize / (1024 * 1024)).toFixed(2)} MB. Maximum allowed: {(maxSize / (1024 * 1024)).toFixed(2)} MB.</p>
+						<div class="w-full bg-gray-200 rounded-full h-2.5 mt-2 mb-4">
+							<div class="{error ? 'bg-destructive' : 'bg-primary'} h-2.5 rounded-full" style="width: {Math.min(100, (totalSize / maxSize) * 100)}%"></div>
+						</div>
+					{/if}
+
+					{#if error}
+						<p class="text-red-600 text-sm mb-4">{error}</p>
+					{/if}
+
+				{/if}
 			</div>
 			{#if isComplete}
 				<hr />
@@ -243,7 +265,7 @@
 						Total <Badge>{total + 1}$</Badge>
 					</div>
 					<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} /></div>
-					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email)}>Go</Button></div>
+					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email) || Boolean(error)}>Go</Button></div>
 				</div>
 			{/if}
 		</main>

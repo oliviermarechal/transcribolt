@@ -28,6 +28,6 @@ export const calculateCost = async (file: File): Promise<{duration: number, cost
 		const durationInMinutes = duration / 60;
 		const cost = durationInMinutes * 0.07;
 
-		return Math.ceil(cost * 100) / 100;
+		return parseFloat(cost.toFixed(2));
 	}
 }

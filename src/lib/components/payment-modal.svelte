@@ -44,5 +44,5 @@
 
 <form on:submit={handleSubmit}>
 	<div id="payment-element"><!-- A Stripe Element will be inserted here. --></div>
-	<Button type="submit">Payer</Button>
+	<Button type="submit" class="mt-4">Payer</Button>
 </form>
