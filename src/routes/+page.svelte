@@ -11,6 +11,9 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { OnPaymentSuccessed, type OutputFormat } from '$lib/actions/on-payment-successed';
 
+	import Sun from "lucide-svelte/icons/sun";
+	import Moon from "lucide-svelte/icons/moon";
+	import { toggleMode, ModeWatcher } from "mode-watcher";
 	const languageMapping = [
 		{ language: 'English', code: 'en' },
 		{ language: 'French', code: 'fr' },
@@ -166,6 +169,7 @@
 	}
 </script>
 
+<ModeWatcher defaultMode="system" />
 {#if loading}
 	<div class="flex flex-col items-center justify-center min-h-screen">
 		<div class="loader"></div>
@@ -174,6 +178,13 @@
 	<div class="flex flex-col items-center justify-center min-h-screen">
 		<header class="w-9/12 py-4 text-center">
 			<h1 class="text-2xl font-bold text-primary">Transcribolt</h1>
+			<div class="absolute right-1/4 top-3">
+				<Button on:click={toggleMode} variant="outline" size="icon">
+					<Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+					<Moon class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+					<span class="sr-only">Toggle theme</span>
+				</Button>
+			</div>
 			<p class="mt-4">Transform your spoken words into written text effortlessly with our no-signup speech to text transcription tool. Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments. Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p>
 		</header>
 		<main class="flex-1 flex flex-col items-center px-4 mt-28 mb-28 w-9/12 space-y-2">
