@@ -103,7 +103,6 @@ export class ProcessingTranscriptionUseCase implements UseCaseInterface {
 			const zip = new JSZip();
 			await Promise.all(
 				splittedFiles.map(async (file) => {
-					console.log(file, 'file');
 					await fs.writeFile(`/tmp/${file.name}`, file.buffer);
 					const transcription = await this.transcriptorGateway.transcribeAudio(
 						`/tmp/${file.name}`,

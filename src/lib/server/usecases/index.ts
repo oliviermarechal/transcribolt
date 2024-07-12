@@ -4,7 +4,7 @@ import { PaymentGateway } from '../infra/gateway/payment.gateway';
 import dotenv from 'dotenv';
 import { ProcessingTranscriptionUseCase } from './processing-transcription.use-case';
 import { TranscriptorGateway } from '../infra/gateway/transcriptor.gateway';
-import { env } from '$env/dynamic/private'
+import { RefundAndSendFailureMailUseCase } from '$lib/server/usecases/refund-and-send-failure-mail.use-case';
 
 dotenv.config();
 
@@ -14,14 +14,12 @@ export * from './processing-transcription.use-case';
 const paymentGateway = new PaymentGateway();
 
 const app = App.getInstance();
-app.registerUseCase(
-	CreateCheckoutUseCase.name,
-	new CreateCheckoutUseCase(paymentGateway)
-)
+app.registerUseCase(CreateCheckoutUseCase.name, new CreateCheckoutUseCase(paymentGateway));
 app.registerUseCase(
 	ProcessingTranscriptionUseCase.name,
-	new ProcessingTranscriptionUseCase(
-		paymentGateway,
-		new TranscriptorGateway()
-	)
-)
+	new ProcessingTranscriptionUseCase(paymentGateway, new TranscriptorGateway()),
+);
+app.registerUseCase(
+	RefundAndSendFailureMailUseCase.name,
+	new RefundAndSendFailureMailUseCase(paymentGateway),
+);

@@ -95,6 +95,12 @@
 			email = '';
 			clientSecret = null;
 			isComplete = false;
+		} else {
+			resume = [];
+			email = '';
+			clientSecret = null;
+			isComplete = false;
+			alert('An error has occurred. We have issued a refund. We apologize for the inconvenience.')
 		}
 	}
 

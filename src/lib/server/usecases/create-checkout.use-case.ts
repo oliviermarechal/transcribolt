@@ -4,11 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { App } from '../app/app';
 
 export class CreateCheckoutUseCase implements UseCaseInterface {
-	constructor(
-		private readonly paymentGateway: PaymentGatewayInterface,
-	) {}
+	constructor(private readonly paymentGateway: PaymentGatewayInterface) {}
 
-	async handle(price: number, email: string): Promise<{ clientSecret: string | null, id: string }> {
+	async handle(
+		price: number,
+		email: string,
+	): Promise<{ clientSecret: string | null; id: string }> {
 		const result = await this.paymentGateway.createCheckout(price, email);
 		await App.getDb()
 			.insertInto('transcription_request')
