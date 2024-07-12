@@ -13,6 +13,10 @@
 
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
+	import Speech from "lucide-svelte/icons/speech";
+	import Zap from "lucide-svelte/icons/zap";
+	import Users from "lucide-svelte/icons/users";
+
 	import { toggleMode, ModeWatcher } from "mode-watcher";
 	const languageMapping = [
 		{ language: 'English', code: 'en' },
@@ -177,7 +181,7 @@
 {:else}
 	<div class="flex flex-col items-center justify-center min-h-screen">
 		<header class="w-9/12 py-4 text-center">
-			<h1 class="text-2xl font-bold text-primary">Transcribolt</h1>
+			<h1 class="text-4xl font-bold text-primary">Transcribolt</h1>
 			<div class="absolute right-1/4 top-3">
 				<Button on:click={toggleMode} variant="outline" size="icon">
 					<Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -185,9 +189,13 @@
 					<span class="sr-only">Toggle theme</span>
 				</Button>
 			</div>
-			<p class="mt-4">Transform your spoken words into written text effortlessly with our no-signup speech to text transcription tool. Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments. Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p>
+			<div class="mt-4 ml-28 space-y-2">
+				<div class="text-left flex flex-row space-x-2"><Speech /><p>Transform your spoken words into written text effortlessly with our no-signup online speech to text transcription tool.</p></div>
+				<div class="text-left flex flex-row space-x-2"><Zap /><p>Enjoy fast, accurate transcriptions directly in your browser, without the need for accounts or commitments.</p></div>
+				<div class="text-left flex flex-row space-x-2"><Users /><p>Perfect for students, professionals, and anyone needing quick and reliable transcription services.</p></div>
+			</div>
 		</header>
-		<main class="flex-1 flex flex-col items-center px-4 mt-28 mb-28 w-9/12 space-y-2">
+		<main class="flex-1 flex flex-col items-center px-4 mt-14 mb-28 w-9/12 space-y-2">
 			<div class="w-full flex items-center justify-center">
 				<Dropzone
 					on:drop={handleDropFiles}
@@ -205,14 +213,13 @@
 			<div class="flex flex-col space-y-2 w-full text-center p-4 text-xl">
 				{#if resume.length > 0}
 					<p>Please select the language of the audio file(s) and the output format to proceed with transcription.</p>
-					<p>You can rename your files if you want</p>
 				{/if}
 				{#each resume as item}
-					<div class="flex justify-around text-center space-x-2 border rounded-xl p-4">
+					<div class="flex justify-around items-center text-center space-x-2 border rounded-xl p-4">
 						<div class="w-3/12 flex flex-col gap-1.5 text-left">
 							<Label for="{item.id}_language">File language</Label>
 							<Select.Root onSelectedChange={(e) => onSelectLanguageChange(item.id, e?.value)} selected={{value: item.language, label: languageMapping.find(l => l.code === item.language)?.language}}>
-								<Select.Trigger id="{item.id}_language" class="w-full">
+								<Select.Trigger id="{item.id}_language" class="w-full {item.language === undefined ? ' border-4 border-red-700' : ''}">
 									<Select.Value placeholder="Select file language" />
 								</Select.Trigger>
 								<Select.Content class="w-full">
@@ -266,7 +273,7 @@
 
 				{/if}
 			</div>
-			{#if isComplete}
+			{#if resume?.length > 0}
 				<hr />
 				<div class="flex justify-between w-full">
 					<div class="w-1/4 p-2">
@@ -275,7 +282,7 @@
 					<div class="w-1/4 p-2">
 						Total <Badge>{total + 1}$</Badge>
 					</div>
-					<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} /></div>
+					<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} class="{email ? '' : 'border-4 border-red-700'}" /></div>
 					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email) || Boolean(error)}>Go</Button></div>
 				</div>
 			{/if}
