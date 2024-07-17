@@ -289,7 +289,7 @@
 						Total <Badge>{total + 1}$</Badge>
 					</div>
 					<div class="w-1/4"><Input name="email" placeholder="Email" bind:value={email} class="{email ? '' : 'border-4 border-red-700'}" /></div>
-					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={!Boolean(email) || Boolean(error)}>Go</Button></div>
+					<div class="w-1/4 flex justify-end"><Button on:click={createCheckout} disabled={(!Boolean(email) || !isComplete) || Boolean(error)}>Go</Button></div>
 				</div>
 			{/if}
 		</main>

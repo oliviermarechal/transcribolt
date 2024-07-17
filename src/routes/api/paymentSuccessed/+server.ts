@@ -1,8 +1,7 @@
 import { App } from '$lib/server/app/app';
-import { CreateCheckoutUseCase, ProcessingTranscriptionUseCase } from '$lib/server/usecases';
+import { ProcessingTranscriptionUseCase } from '$lib/server/usecases';
 import type { UploadedTranscriptionFileInterface } from '$lib/server/domain/interfaces';
 import type { OutputFormat } from '$lib/actions/on-payment-successed';
-import fs from 'fs';
 import { json } from '@sveltejs/kit';
 import { RefundAndSendFailureMailUseCase } from '$lib/server/usecases/refund-and-send-failure-mail.use-case';
 
@@ -53,6 +52,10 @@ export async function POST({ request }) {
 		await app
 			.getUseCase<RefundAndSendFailureMailUseCase>(RefundAndSendFailureMailUseCase.name)
 			.handle(checkoutId);
+		console.log(e);
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		console.log(e?.message);
 
 		return json({}, { status: 400 });
 	}
